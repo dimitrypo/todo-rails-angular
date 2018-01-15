@@ -1,0 +1,52 @@
+# To update todo image - todo/todo_dev
+# rm -rf log/* && sudo docker build --tag=todo/todo_dev -f ./docker/Dockerfile_dev . && sudo docker push todo/todo_dev
+#
+# To pull/update it (locally)
+# docker pull todo/todo
+version: '2.1'
+services:
+  todo:
+    container_name: todo
+    build: 
+      context: "."
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "3012:3000"
+    env_file:
+      - docker/development.env
+    volumes:
+      - .:/todo/   
+    depends_on:
+      - todo_database
+    links: 
+      - todo_database
+    mem_limit: 500m
+    memswap_limit: 0m
+    command:
+      "bash -c -l 'bundle install &&
+                   cp ./docker/database.yml ./config &&
+                   rake db:migrate RAILS_ENV=development &&
+                   rm -rf /todo/tmp/* &&
+                   RAILS_ENV=development rails s'"
+                   #                   
+#RAILS_ENV=development puma -e development -b tcp://0.0.0.0 -p 3000'"
+#RAILS_ENV=development puma -e development -b tcp://0.0.0.0 -p 3000'"      
+  todo_database:
+    container_name: todo_database
+    image: postgres
+    expose:
+      - "5432"
+    environment:
+      - "TERM=xterm"
+      - "POSTGRES_USER=root"
+      - "POSTGRES_DB=todo_development"
+      - "POSTGRES_PASSWORD=railsrails"
+    volumes:
+      - todo_postgresql_data:/var/lib/postgresql     
+    restart: always    
+volumes:
+  todo_postgresql_data:
+
+
+    
+
